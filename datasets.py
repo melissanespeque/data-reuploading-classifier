@@ -1,7 +1,131 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+#=======================================================
+#=================SYNTHETIC DATASETS====================
+#=======================================================
+
+#Cirle's generation function (obtained from the article)
+def circle(samples, random_seed=42):
+    np.random.seed(random_seed)
+    centers = np.array([[0, 0]])
+    radii = np.array([np.sqrt(2/np.pi)]) #def radius so it represents 0.5 the area of the square - should be a balanced dataset in classification
+    data=[]
+    dim = 2
+    for i in range(samples):
+        x = 2 * (np.random.rand(dim)) - 1 #so that every point its inside the squared limit (-1,1)
+        #random.rand = create an array of the given shape and populate it with random samples from a uniform distribution over [0, 1)
+        y = 0
+        for c, r in zip(centers, radii):  
+            if np.linalg.norm(x - c) < r: #calculates distance between point and center to classify if inside the circle or not
+                y = 1 
+
+        data.append([x, y])
+            
+    return data, (centers, radii) 
+
+#Circle's visualization function
+def plot_circle(data, centers, radii):
+    
+    x = np.array([i[0] for i in data]) #datapoints
+    y = np.array([i[1] for i in data]) #labels definition
+    
+    center = centers[0]
+    radius = radii[0]
+    
+    plt.figure(figsize=(6,6))
+    plt.scatter(x[y == 0, 0], x[y == 0, 1], c='goldenrod', alpha=0.5, s=20, label='Outside') #plotting the dataset with its labels
+    plt.scatter(x[y == 1, 0], x[y == 1, 1], c='fuchsia', alpha=0.5, s=20, label='Inside')
+    
+    theta = np.linspace(0, 2*np.pi, 200)
+    plt.plot(center[0] + radius * np.cos(theta), center[1] + radius * np.sin(theta),  #plotting the circle
+            'k--', linewidth=2, label='Border')    
+    
+data, (centers, radii) = circle(samples=3000, random_seed=42) #running for N=3000
+fig = plot_circle(data, centers, radii)
+plt.show()
+
+#=======================================================
+
+#Diamond's shape pattern generation function
+def diamond(samples, limit, scale, random_seed=42):
+    np.random.seed(random_seed)
+    
+    x = np.random.uniform(0, limit, samples) #generates the data points inside the square limit
+    y = np.random.uniform(0, limit, samples)
+    
+    logic = (np.floor((x + y) / scale).astype(int) + np.floor((x - y + scale/2) / scale).astype(int)) % 2  
+    #(x + y) and (x - y) to create diagonals
+    #Default function: (floor((x+y)/s) + floor((x-y+s/2)/s)) mod 2
+    #scale determines the frequence of pattern - if bigger, diamonds get bigger; otherwise, denser
+    return x, y, logic
+
+#Diamond's visualization function
+def plot_diamond(x_data, y_data, logic):
+    colors = np.where(logic == 0, 'fuchsia', 'goldenrod')
+
+    plt.figure(figsize=(6, 6))
+    plt.scatter(x_data, y_data, c=colors, s=10)
+
+    plt.xlim(0, 10)
+    plt.ylim(0, 10)
+    plt.gca().set_aspect('equal')
+    plt.title("Diamonds Pattern Classification")
+    
+x_data, y_data, logic = checkerboard(samples=5000, limit=10, scale=4.0)
+fig = plot_diamond(x_data, y_data, logic)
+plt.show()
+
+#=======================================================
+#Wavy pattern generation function (obtained from the article)
+def wavy_lines(samples, freq = 1):
+    def fun1(s):
+        return s + np.sin(freq * np.pi * s)
+    
+    def fun2(s):
+        return -s + np.sin(freq * np.pi * s)
+    data=[]
+    dim=2
+    for i in range(samples):
+        x = 2 * (np.random.rand(dim)) - 1
+        if x[1] < fun1(x[0]) and x[1] < fun2(x[0]): y = 0
+        if x[1] < fun1(x[0]) and x[1] > fun2(x[0]): y = 1
+        if x[1] > fun1(x[0]) and x[1] < fun2(x[0]): y = 2
+        if x[1] > fun1(x[0]) and x[1] > fun2(x[0]): y = 3        
+        data.append([x, y])
+
+    return data, freq
+
+#Wavy pattern visualization function
+def plot_wavy(data,freq):
+#separating into features and labels
+    x = np.array([i[0] for i in data]) 
+    y = np.array([i[1] for i in data])
+
+    plt.figure(figsize=(6,6))
+
+    plt.scatter(x[:,0], x[:,1], c=y, cmap='spring', s=10)
+
+# curves
+    s = np.linspace(-1, 1, 500)
+    plt.plot( s, np.clip(s + np.sin(freq * np.pi * s), -1, 1),   'k-', linewidth=2)
+    plt.plot( s, -s + np.sin(freq * np.pi * s), 'k-', linewidth=2)
+#  visual adjustments
+    plt.xlim(-1,1)
+    plt.ylim(-1,1)
+    plt.gca().set_aspect('equal')
+    plt.grid(alpha=0.3)
+    plt.title('Wavy Lines Classification')
+data, freq = wavy_lines(samples=3000, freq=1)
+fig = plot_wavy(data,freq)
+plt.show()
+
+#=======================================================
+#======================IRIS DATASET=====================
+#=======================================================
 
 def get_iris_binary(task_type="setosa_vs_versicolor", test_size=0.2, random_state=42):
     
