@@ -75,7 +75,7 @@ def plot_diamond(x_data, y_data, logic):
     plt.gca().set_aspect('equal')
     plt.title("Diamonds Pattern Classification")
     
-x_data, y_data, logic = checkerboard(samples=5000, limit=10, scale=4.0)
+x_data, y_data, logic = diamond(samples=5000, limit=10, scale=4.0)
 fig = plot_diamond(x_data, y_data, logic)
 plt.show()
 
@@ -126,7 +126,6 @@ plt.show()
 #=======================================================
 #======================IRIS DATASET=====================
 #=======================================================
-
 def get_iris_binary(task_type="setosa_vs_versicolor", test_size=0.2, random_state=42):
     
 #Binary classification in quantum circuits with load and preprocess the Iris dataset
@@ -134,12 +133,12 @@ def get_iris_binary(task_type="setosa_vs_versicolor", test_size=0.2, random_stat
 #test_size (float): Proportion of the dataset to include in the test split
 #random_state (int): Random state for reproducibility
         
-    Returns:
-        X_train, X_test, y_train, y_test
+#  Returns:
+#        X_train, X_test, y_train, y_test
     
     #Load Data
     iris = load_iris()
-    X = iris.data
+    X = iris.dat
     y = iris.target
     
     #Binary Classification (0:setosa,1:versicolor,2:virginica)
@@ -172,7 +171,7 @@ def get_iris_binary(task_type="setosa_vs_versicolor", test_size=0.2, random_stat
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train_pca)
     X_test_scaled = scaler.transform(X_test_pca)
-    
+   
     #Quantum Angle Rescaling (Squeezing values between -pi and +pi)
     minmax = MinMaxScaler(feature_range=(-np.pi, np.pi))
     X_train_final = minmax.fit_transform(X_train_scaled)
