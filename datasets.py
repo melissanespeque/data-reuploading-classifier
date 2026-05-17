@@ -138,7 +138,7 @@ def get_iris_binary(task_type="setosa_vs_versicolor", test_size=0.2, random_stat
     
     #Load Data
     iris = load_iris()
-    X = iris.dat
+    X = iris.data
     y = iris.target
     
     #Binary Classification (0:setosa,1:versicolor,2:virginica)
