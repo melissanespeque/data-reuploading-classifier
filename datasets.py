@@ -22,8 +22,8 @@ def circle(samples, random_seed=42):
         for c, r in zip(centers, radii):  
             if np.linalg.norm(x - c) < r: #calculates distance between point and center to classify if inside the circle or not
                 y = 1 
-
-        data.append([x, y])
+        x_padded = np.append(x, 0) #padding with zeros to make it 3D for quantum encoding (we can ignore the z-axis in visualization)   
+        data.append([x_padded, y])
             
     return data, (centers, radii) 
 
@@ -61,6 +61,7 @@ def diamond(samples, limit, scale, random_seed=42):
     #(x + y) and (x - y) to create diagonals
     #Default function: (floor((x+y)/s) + floor((x-y+s/2)/s)) mod 2
     #scale determines the frequence of pattern - if bigger, diamonds get bigger; otherwise, denser
+    #xyz = np.column_stack([x, y, np.zeros(samples)]) #padding with zeros to make it 3D for quantum encoding (we can ignore the z-axis in visualization) 
     return x, y, logic
 
 #Diamond's visualization function
