@@ -6,11 +6,12 @@ from qiskit.quantum_info import Statevector, DensityMatrix, partial_trace, state
 def pack_params(theta, w, alpha):
 
     params = np.concatenate([theta.ravel(), w.ravel() ,alpha.ravel()])
-
+    #put the parameters from a 1D array to the original shapes of theta, w and alpha
     return params
 
 def single_unpack_params(params, n_layers, n_classes):
-
+    #unpack the parameters from matrix form to a 1D array for scipy.optimize.minimize
+    #being theta the final angles of the rotations, w the weights alpha the weights for the cost function
     theta_size = 1*n_layers*3 #n_qubits*n_layers*3
     w_size = 1*n_layers*3
 
