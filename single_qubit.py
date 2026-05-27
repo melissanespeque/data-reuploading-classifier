@@ -47,23 +47,23 @@ def representatives(n_classes, qubits_lab):
             reprs[3] = 1 / np.sqrt(2) * np.array([1, -1])
             reprs[4] = 1 / np.sqrt(2) * np.array([1, 1j])
             reprs[5] = 1 / np.sqrt(2) * np.array([1, -1j])
-    if qubits_lab == 2:
-        if n_classes == 0:
-            raise ValueError('Nonsense classifier')
-        if n_classes == 1:
-            raise ValueError('Nonsense classifier')
-        if n_classes == 2:
-            reprs[0] = np.array([1, 0, 0, 0])
-            reprs[1] = np.array([0, 0, 0, 1])
-        if n_classes == 3:
-            reprs[0] = np.array([1, 0, 0, 0])
-            reprs[1] = np.array([0, 1, 0, 0])
-            reprs[2] = np.array([0, 0, 1, 0])
-        if n_classes == 4:
-            reprs[0] = np.array([1, 0, 0, 0])
-            reprs[1] = np.array([0, 1, 0, 0])
-            reprs[2] = np.array([0, 0, 1, 0])
-            reprs[3] = np.array([0, 0, 0, 1])
+    #if qubits_lab == 2:
+     #   if n_classes == 0:
+     #       raise ValueError('Nonsense classifier')
+      #  if n_classes == 1:
+       #     raise ValueError('Nonsense classifier')
+        #if n_classes == 2:
+         #   reprs[0] = np.array([1, 0, 0, 0])
+          #  reprs[1] = np.array([0, 0, 0, 1])
+     #   if n_classes == 3:
+      #      reprs[0] = np.array([1, 0, 0, 0])
+       #     reprs[1] = np.array([0, 1, 0, 0])
+        #    reprs[2] = np.array([0, 0, 1, 0])
+       # if n_classes == 4:
+        #    reprs[0] = np.array([1, 0, 0, 0])
+         #   reprs[1] = np.array([0, 1, 0, 0])
+          #  reprs[2] = np.array([0, 0, 1, 0])
+          #  reprs[3] = np.array([0, 0, 0, 1])
             
     return reprs
 
@@ -81,7 +81,8 @@ def single_qubit_circuit(n_layers, x, theta, w):
     qc = QuantumCircuit(1)
 
     for i in range(n_layers):
-        phi = theta[i] + w[i]*x
+        x_enc = np.dot(w[i],x)
+        phi = theta[i] + x_enc
 
         qc.rz(phi[2], 0)
         qc.ry(phi[0], 0)
@@ -125,32 +126,32 @@ def single_qubit_predict(x, n_layers, n_classes, theta, w, reprs):
    
     return np.array(predictions)
 
-#def weighted_cost_function(params, n_qubits,n_layers, n_classes, x, y, reprs):
+def weighted_cost_function(params,n_layers, n_classes, x, y, reprs):
 
-#    wcf_qc = 0
+    wcf = 0
 
- #   theta, w, alpha = unpack_params(params, n_qubits, n_layers, n_classes)
-  #  qc = [circuit(n_qubits, n_layers, theta, w, xi) for xi in x]
+    theta, w, alpha = single_unpack_params(params, n_layers, n_classes)
+    qc = [circuit(n_qubits, n_layers, theta, w, xi) for xi in x]
 
-   # for i in range(len(qc)):
-    #    sv = Statevector(qc[i])
+    for i in range(len(qc)):
+        sv = Statevector(qc[i])
 
-     #   dm = DensityMatrix(sv)
-      #  true_class = y[i]
-       # Y = get_Y(n_classes, true_class, reprs)   
+        dm = DensityMatrix(sv)
+        true_class = y[i]
+        Y = get_Y(n_classes, true_class, reprs)   
 
-        #F_all = np.zeros((n_classes, n_qubits))
- #       for c in range(n_classes):
+        F_all = np.zeros((n_classes, n_qubits))
+        for c in range(n_classes):
             
-  #          for q in range(n_qubits):
-   #             other_qubits = [idx for idx in range(n_qubits) if idx != q]
-    #            rho=partial_trace(dm, other_qubits) 
+            for q in range(n_qubits):
+                other_qubits = [idx for idx in range(n_qubits) if idx != q]
+                rho=partial_trace(dm, other_qubits) 
 
-     #           F_all[c,q] = state_fidelity(rho, DensityMatrix(reprs[c])).real
+                F_all[c,q] = state_fidelity(rho, DensityMatrix(reprs[c])).real
         
-      #  for c in range(n_classes):
-       #     summ = np.sum(alpha[c] * F_all[c, :]) 
-        #    wcf_qc += (summ - Y[c]) ** 2 
+        for c in range(n_classes):
+            summ = np.sum(alpha[c] * F_all[c, :]) 
+            wcf_qc += (summ - Y[c]) ** 2 
             
 
-    #return 0.5*wcf_qc
+    return 0.5*wcf_qc
