@@ -82,22 +82,35 @@ plt.show()
 
 #=======================================================
 #Wavy pattern generation function (obtained from the article)
-def wavy_lines(samples, freq = 1):
+def wavy_lines(samples, freq=1):
+    """
+    Gera dataset wavy lines com dados 3D (última dimensão = 0)
+    """
     def fun1(s):
         return s + np.sin(freq * np.pi * s)
     
     def fun2(s):
         return -s + np.sin(freq * np.pi * s)
-    data=[]
-    dim=2
+    
+    data = []
+    dim = 2
+    
     for i in range(samples):
         x = 2 * (np.random.rand(dim)) - 1
-        if x[1] < fun1(x[0]) and x[1] < fun2(x[0]): y = 0
-        if x[1] < fun1(x[0]) and x[1] > fun2(x[0]): y = 1
-        if x[1] > fun1(x[0]) and x[1] < fun2(x[0]): y = 2
-        if x[1] > fun1(x[0]) and x[1] > fun2(x[0]): y = 3        
-        data.append([x, y])
-
+        
+        if x[1] < fun1(x[0]) and x[1] < fun2(x[0]): 
+            y = 0
+        if x[1] < fun1(x[0]) and x[1] > fun2(x[0]): 
+            y = 1
+        if x[1] > fun1(x[0]) and x[1] < fun2(x[0]): 
+            y = 2
+        if x[1] > fun1(x[0]) and x[1] > fun2(x[0]): 
+            y = 3
+        
+        # Adicionar dimensão extra preenchida com 0
+        x_padded = np.append(x, 0)  # [x0, x1, 0]
+        data.append([x_padded, y])
+    
     return data, freq
 
 #Wavy pattern visualization function
