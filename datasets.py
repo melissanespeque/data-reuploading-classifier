@@ -22,8 +22,8 @@ def circle(samples, random_seed=42):
         for c, r in zip(centers, radii):  
             if np.linalg.norm(x - c) < r: #calculates distance between point and center to classify if inside the circle or not
                 y = 1 
-
-        data.append([x, y])
+        data.append([np.append(x[:2], 0), y])
+        #data.append([x, y])
             
     return data, (centers, radii) 
 
