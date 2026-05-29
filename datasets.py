@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 #=======================================================
 
 #Cirle's generation function (obtained from the article)
-def circle(samples, random_seed=42):
+def circle(samples, random_seed=30):
     np.random.seed(random_seed)
     centers = np.array([[0, 0]])
     radii = np.array([np.sqrt(2/np.pi)]) #def radius so it represents 0.5 the area of the square - should be a balanced dataset in classification
@@ -44,14 +44,35 @@ def plot_circle(data, centers, radii):
     plt.plot(center[0] + radius * np.cos(theta), center[1] + radius * np.sin(theta),  #plotting the circle
             'k--', linewidth=2, label='Border')    
     
-data, (centers, radii) = circle(samples=3000, random_seed=42) #running for N=3000
+data, (centers, radii) = circle(samples=4200, random_seed=30) #running for N=4200
 fig = plot_circle(data, centers, radii)
 plt.show()
+
+#Circle's split function
+def split_circle(samples=4200, test_size=0.95, random_state=30):
+    """
+    to split circle data
+    returns: x_train_circle, x_test_circle, y_train_circle, y_test_circle
+    """
+    data, (centers, radii) = circle(samples=samples, random_seed=random_state)
+    x = np.array([i[0] for i in data])
+    y = np.array([i[1] for i in data])
+    
+    x_train_circle, x_test_circle, y_train_circle, y_test_circle = train_test_split(
+        x, y,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=y
+    )
+    
+    print(f"Circle - Train: {len(x_train_circle)} samples | Test: {len(x_test_circle)} samples")
+    return x_train_circle, x_test_circle, y_train_circle, y_test_circle
+
 
 #=======================================================
 
 #Diamond's shape pattern generation function
-def diamond(samples, limit, scale, random_seed=42):
+def diamond(samples, limit, scale, random_seed=30):
     np.random.seed(random_seed)
     
     x = np.random.uniform(0, limit, samples) #generates the data points inside the square limit
@@ -75,9 +96,30 @@ def plot_diamond(x_data, y_data, logic):
     plt.gca().set_aspect('equal')
     plt.title("Diamonds Pattern Classification")
     
-x_data, y_data, logic = diamond(samples=5000, limit=10, scale=4.0)
+x_data, y_data, logic = diamond(samples=4200, limit=10, scale=4.0)
 fig = plot_diamond(x_data, y_data, logic)
 plt.show()
+
+#Diamond's split function
+def split_diamond(samples=4200, test_size=0.95, random_state=30, limit=10, scale=4.0):
+    """
+    Generate and split the diamond pattern dataset.
+    Returns: x_train_diamond, x_test_diamond, y_train_diamond, y_test_diamond
+    """
+    x, y, logic = diamond(samples=samples, limit=limit, scale=scale, random_seed=random_state)
+    
+    # Padding
+    x_data = np.column_stack([x, y, np.zeros(len(x))])  # Adicionar padding
+    
+    x_train_diamond, x_test_diamond, y_train_diamond, y_test_diamond = train_test_split(
+        x_data, logic,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=logic
+    )
+    
+    print(f"Diamond - Train: {len(x_train_diamond)} samples | Test: {len(x_test_diamond)} samples")
+    return x_train_diamond, x_test_diamond, y_train_diamond, y_test_diamond
 
 #=======================================================
 #Wavy pattern generation function (obtained from the article)
@@ -95,8 +137,8 @@ def wavy_lines(samples, freq = 1):
         if x[1] < fun1(x[0]) and x[1] > fun2(x[0]): y = 1
         if x[1] > fun1(x[0]) and x[1] < fun2(x[0]): y = 2
         if x[1] > fun1(x[0]) and x[1] > fun2(x[0]): y = 3        
-        data.append([x, y])
-
+        x_padded = np.append(x, 0)  # [x0, x1, 0]
+        data.append([x_padded, y])
     return data, freq
 
 #Wavy pattern visualization function
@@ -122,6 +164,29 @@ def plot_wavy(data,freq):
 data, freq = wavy_lines(samples=3000, freq=1)
 fig = plot_wavy(data,freq)
 plt.show()
+
+#Wavy pattern split function
+def split_wavy_lines(samples=4200, test_size=0.95, random_state=30, freq=1):
+    """
+    Generate and split the wavy lines dataset.
+    Returns: x_train_wavy, x_test_wavy, y_train_wavy, y_test_wavy
+    """
+    data, freq_out = wavy_lines(samples=samples, freq=freq)
+    x = np.array([i[0] for i in data])
+    y = np.array([i[1] for i in data])
+    
+    x_train_wavy, x_test_wavy, y_train_wavy, y_test_wavy = train_test_split(
+        x, y,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=y
+    )
+    
+    print(f"Wavy Lines - Train: {len(x_train_wavy)} samples | Test: {len(x_test_wavy)} samples")
+    
+    return x_train_wavy, x_test_wavy, y_train_wavy, y_test_wavy
+
+
 
 #=======================================================
 #======================IRIS DATASET=====================
