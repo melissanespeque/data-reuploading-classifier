@@ -1,0 +1,20 @@
+
+Figur of merit = fidelity_chi
+Problem = diamond
+Number of qubits = 1
+Number of layers = 2
+Minimization method = L-BFGS-B
+Random seed = 30
+
+BEST RESULT
+
+
+THETA = 
+[[[-0.17552455 -0.46843735  0.58332435]
+  [-0.07884925  0.45448962 -1.19062733]]]
+ALPHA = 
+[[[ -2.14859524 -12.62993427]
+  [ -2.14184398   0.37996985]]]
+chi**2 = -0.8007228076689608
+acc_train = 0.735
+acc_test = 0.65225
