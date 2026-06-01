@@ -7,10 +7,39 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 #=======================================================
 #=================SYNTHETIC DATASETS====================
 #=======================================================
+problems = ['circle', 'diamond', 'wavy lines', 'iris']
+
+def data_generator(problem, samples=None):
+    """
+    This function generates the data for a problem
+    INPUT: 
+        -problem: Name of the problem, one of: 'circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines'
+        -samples Number of samples for the data
+    OUTPUT:
+        -data: set of training and test data
+        -settings: things needed for drawing
+    """
+    problem = problem.lower()
+    if problem not in problems:
+        raise ValueError('problem must be one of {}'.format(problems))
+    if samples == None:
+        samples = 4200
+            
+    if problem == 'circle':
+        data, settings = circle(samples)
+
+    elif problem == 'diamond':
+        data, settings = diamond(samples)
+
+    elif problem == 'wavy lines':
+        data, settings = wavy_lines(samples)
+    
+    return data, settings 
+
 
 #Cirle's generation function (obtained from the article)
-def circle(samples, random_seed=30):
-    np.random.seed(random_seed)
+def circle(samples):
+    #np.random.seed(random_seed)
     centers = np.array([[0, 0]])
     radii = np.array([np.sqrt(2/np.pi)]) #def radius so it represents 0.5 the area of the square - should be a balanced dataset in classification
     data=[]
@@ -22,8 +51,8 @@ def circle(samples, random_seed=30):
         for c, r in zip(centers, radii):  
             if np.linalg.norm(x - c) < r: #calculates distance between point and center to classify if inside the circle or not
                 y = 1 
-        data.append([np.append(x[:2], 0), y])
-        #data.append([x, y])
+        
+        data.append([x, y])
             
     return data, (centers, radii) 
 
@@ -44,82 +73,49 @@ def plot_circle(data, centers, radii):
     plt.plot(center[0] + radius * np.cos(theta), center[1] + radius * np.sin(theta),  #plotting the circle
             'k--', linewidth=2, label='Border')    
     
-data, (centers, radii) = circle(samples=4200, random_seed=30) #running for N=4200
+data, (centers, radii) = circle(samples=3000) #running for N=3000
 fig = plot_circle(data, centers, radii)
 plt.show()
-
-#Circle's split function
-def split_circle(samples=4200, test_size=0.95, random_state=30):
-    """
-    to split circle data
-    returns: x_train_circle, x_test_circle, y_train_circle, y_test_circle
-    """
-    data, (centers, radii) = circle(samples=samples, random_seed=random_state)
-    x = np.array([i[0] for i in data])
-    y = np.array([i[1] for i in data])
-    
-    x_train_circle, x_test_circle, y_train_circle, y_test_circle = train_test_split(
-        x, y,
-        test_size=test_size,
-        random_state=random_state,
-        stratify=y
-    )
-    
-    print(f"Circle - Train: {len(x_train_circle)} samples | Test: {len(x_test_circle)} samples")
-    return x_train_circle, x_test_circle, y_train_circle, y_test_circle
-
 
 #=======================================================
 
 #Diamond's shape pattern generation function
-def diamond(samples, limit, scale, random_seed=30):
+def diamond(samples, random_seed=42):
     np.random.seed(random_seed)
+    data = []
+    limit = 1
+    scale = 0.5
+
+    x_i = np.random.uniform(-1, limit, samples) #generates the data points inside the square limit
+    y_i = np.random.uniform(-1, limit, samples)
+    x = np.column_stack([x_i, y_i])
+
+    for i in range(len(x)):
+        logic = (np.floor((x[i][0] + x[i][1]) / scale).astype(int) + np.floor((x[i][0] - x[i][1] + scale/2) / scale).astype(int)) % 2  
+        data.append((x[i], int(logic)))
     
-    x = np.random.uniform(0, limit, samples) #generates the data points inside the square limit
-    y = np.random.uniform(0, limit, samples)
-    
-    logic = (np.floor((x + y) / scale).astype(int) + np.floor((x - y + scale/2) / scale).astype(int)) % 2  
     #(x + y) and (x - y) to create diagonals
     #Default function: (floor((x+y)/s) + floor((x-y+s/2)/s)) mod 2
     #scale determines the frequence of pattern - if bigger, diamonds get bigger; otherwise, denser
-    return x, y, logic
+    return data, (limit, scale)
 
 #Diamond's visualization function
-def plot_diamond(x_data, y_data, logic):
-    colors = np.where(logic == 0, 'fuchsia', 'goldenrod')
+def plot_diamond(data):
+    x = np.array([data[i][0] for i in range(len(data))])
+    y = np.array([data[i][1] for i in range(len(data))])
+    colors = np.where(y == 0, 'fuchsia', 'goldenrod')
 
     plt.figure(figsize=(6, 6))
-    plt.scatter(x_data, y_data, c=colors, s=10)
+    plt.scatter(x[:,0], x[:,1], c=colors, s=10)
 
-    plt.xlim(0, 10)
-    plt.ylim(0, 10)
+    plt.xlim(-1, 1)
+    plt.ylim(-1, 1)
     plt.gca().set_aspect('equal')
     plt.title("Diamonds Pattern Classification")
     
-x_data, y_data, logic = diamond(samples=4200, limit=10, scale=4.0)
-fig = plot_diamond(x_data, y_data, logic)
+data, _ = diamond(samples=5000)
+fig = plot_diamond(data)
 plt.show()
-
-#Diamond's split function
-def split_diamond(samples=4200, test_size=0.95, random_state=30, limit=10, scale=4.0):
-    """
-    Generate and split the diamond pattern dataset.
-    Returns: x_train_diamond, x_test_diamond, y_train_diamond, y_test_diamond
-    """
-    x, y, logic = diamond(samples=samples, limit=limit, scale=scale, random_seed=random_state)
-    
-    # Padding
-    x_data = np.column_stack([x, y, np.zeros(len(x))])  # Adicionar padding
-    
-    x_train_diamond, x_test_diamond, y_train_diamond, y_test_diamond = train_test_split(
-        x_data, logic,
-        test_size=test_size,
-        random_state=random_state,
-        stratify=logic
-    )
-    
-    print(f"Diamond - Train: {len(x_train_diamond)} samples | Test: {len(x_test_diamond)} samples")
-    return x_train_diamond, x_test_diamond, y_train_diamond, y_test_diamond
 
 #=======================================================
 #Wavy pattern generation function (obtained from the article)
@@ -137,8 +133,8 @@ def wavy_lines(samples, freq = 1):
         if x[1] < fun1(x[0]) and x[1] > fun2(x[0]): y = 1
         if x[1] > fun1(x[0]) and x[1] < fun2(x[0]): y = 2
         if x[1] > fun1(x[0]) and x[1] > fun2(x[0]): y = 3        
-        x_padded = np.append(x, 0)  # [x0, x1, 0]
-        data.append([x_padded, y])
+        data.append([x, y])
+
     return data, freq
 
 #Wavy pattern visualization function
@@ -164,29 +160,6 @@ def plot_wavy(data,freq):
 data, freq = wavy_lines(samples=3000, freq=1)
 fig = plot_wavy(data,freq)
 plt.show()
-
-#Wavy pattern split function
-def split_wavy_lines(samples=4200, test_size=0.95, random_state=30, freq=1):
-    """
-    Generate and split the wavy lines dataset.
-    Returns: x_train_wavy, x_test_wavy, y_train_wavy, y_test_wavy
-    """
-    data, freq_out = wavy_lines(samples=samples, freq=freq)
-    x = np.array([i[0] for i in data])
-    y = np.array([i[1] for i in data])
-    
-    x_train_wavy, x_test_wavy, y_train_wavy, y_test_wavy = train_test_split(
-        x, y,
-        test_size=test_size,
-        random_state=random_state,
-        stratify=y
-    )
-    
-    print(f"Wavy Lines - Train: {len(x_train_wavy)} samples | Test: {len(x_test_wavy)} samples")
-    
-    return x_train_wavy, x_test_wavy, y_train_wavy, y_test_wavy
-
-
 
 #=======================================================
 #======================IRIS DATASET=====================
