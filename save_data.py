@@ -17,7 +17,7 @@ def write_summary(chi, problem, qubits, entanglement, layers, method, name,
     INPUT: 
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose between
-            ['circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines']
         -qubits: number of qubits, must be an integer
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
@@ -30,7 +30,6 @@ def write_summary(chi, problem, qubits, entanglement, layers, method, name,
         -acc_train: accuracy for the training set
         -acc_test: accuracy for the test set
         -seed: seed of numpy.random, needed for replicating results
-        -epochs: number of epochs for a 'SGD' method. If there is another method, this input has got no importance
         
     OUTPUT:
         This function has got no outputs, but several files are saved in an appropiate folder. The files are
@@ -50,13 +49,6 @@ def write_summary(chi, problem, qubits, entanglement, layers, method, name,
     file_text.write('\nNumber of layers = ' + str(layers))
     file_text.write('\nMinimization method = '+ method)
     file_text.write('\nRandom seed = '+ str(seed))
-    if method == 'SGD':
-        file_text.write('\nNumber of epochs = '+ str(epochs))
-    file_text.write('\n\nBEST RESULT\n\n')
-    file_text.write('\nTHETA = \n')
-    file_text.write(str(theta))
-    file_text.write('\nALPHA = \n')
-    file_text.write(str(alpha))
     if chi == 'weighted_fidelity_chi':
         file_text.write('\nWEIGHTS = \n')
         file_text.write(str(weights))
@@ -90,7 +82,7 @@ def name_folder(chi, problem, qubits, entanglement, layers, method):
     INPUT: 
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose among
-            ['circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines']
         -qubits: number of qubits, must be an integer
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
@@ -128,7 +120,7 @@ def painter(chi, problem, qubits, entanglement, layers, method, name,
     INPUT:
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose among
-            ['circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines']
         -qubits: number of qubits, must be an integer
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
@@ -185,7 +177,7 @@ def read_summary(chi, problem, qubits, entanglement, layers, method, name):
     INPUT: 
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose among
-            ['circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines'
+            ['circle', 'diamond', 'wavy lines']
         -qubits: number of qubits, must be an integer
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
