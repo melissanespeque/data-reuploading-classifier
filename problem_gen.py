@@ -96,25 +96,24 @@ def representatives(n_classes, qubits_lab):
             reprs[3] = 1 / np.sqrt(2) * np.array([1, -1])
             reprs[4] = 1 / np.sqrt(2) * np.array([1, 1j])
             reprs[5] = 1 / np.sqrt(2) * np.array([1, -1j])
-    if qubits_lab == 2:
-        if n_classes == 0:
-            raise ValueError('Nonsense classifier')
-        if n_classes == 1:
-            raise ValueError('Nonsense classifier')
-        if n_classes == 2:
-            reprs[0] = np.array([1, 0, 0, 0])
-            reprs[1] = np.array([0, 0, 0, 1])
-        if n_classes == 3:
-            reprs[0] = np.array([1, 0, 0, 0])
-            reprs[1] = np.array([0, 1, 0, 0])
-            reprs[2] = np.array([0, 0, 1, 0])
-        if n_classes == 4:
-            reprs[0] = np.array([1, 0, 0, 0])
-            reprs[1] = np.array([0, 1, 0, 0])
-            reprs[2] = np.array([0, 0, 1, 0])
-            reprs[3] = np.array([0, 0, 0, 1])
-        if n_classes > 2**qubits_lab:
-            raise ValueError('Too many classes for the given number of label qubits')
+    #if qubits_lab == 2:
+     #   if n_classes == 0:
+     #       raise ValueError('Nonsense classifier')
+      #  if n_classes == 1:
+       #     raise ValueError('Nonsense classifier')
+        #if n_classes == 2:
+         #   reprs[0] = np.array([1, 0, 0, 0])
+          #  reprs[1] = np.array([0, 0, 0, 1])
+     #   if n_classes == 3:
+      #      reprs[0] = np.array([1, 0, 0, 0])
+       #     reprs[1] = np.array([0, 1, 0, 0])
+        #    reprs[2] = np.array([0, 0, 1, 0])
+       # if n_classes == 4:
+        #    reprs[0] = np.array([1, 0, 0, 0])
+         #   reprs[1] = np.array([0, 1, 0, 0])
+          #  reprs[2] = np.array([0, 0, 1, 0])
+          #  reprs[3] = np.array([0, 0, 0, 1])
+            
     return reprs
 
 def circuit(theta_aux, entanglement):
