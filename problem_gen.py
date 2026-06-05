@@ -134,7 +134,12 @@ def circuit(theta_aux, entanglement):
         num_qubits = hypar[0]
         if num_qubits == 1:
             return single_qubit_circuit(theta_aux)
-
+        elif num_qubits == 2 and entanglement == 'n':
+            return _qcircuit_2qubit_noentanglement(theta_aux)
+        elif num_qubits == 3 and entanglement == 'n':
+            return _qcircuit_3qubit_noentanglement(theta_aux)
+        else:
+            raise ValueError('Not Valid')
 
 def single_qubit_circuit(theta_aux):
 
@@ -146,6 +151,30 @@ def single_qubit_circuit(theta_aux):
         
     return qc
 
+def _qcircuit_2qubit_noentanglement(theta_aux):
+    num_qubits = theta_aux.shape[0]
+    num_layers = theta_aux.shape[1]
+    
+    qc = QuantumCircuit(num_qubits)
+    
+    for l in range(num_layers):
+        for q in range(num_qubits):
+            # Generate the custom matrix for the current parameters
+            mat = U3(theta_aux[q, l, :])
+            # Wrap in UnitaryGate and append
+            gate = UnitaryGate(mat, label="U3_custom")
+            qc.append(gate, [q])
+            
+    return qc
+
+def _qcircuit_3qubit_noentanglement(theta_aux):
+    qc = QuantumCircuit(3)
+    for l in range(theta_aux.shape[1]):
+        for q in range(3):
+            mat = U3(theta_aux[q, l, :])
+            gate = UnitaryGate(mat, label="U3_custom")
+            qc.append(gate, [q])
+    return qc
 
 def U3(theta3):
         t, phi, lam = theta3
