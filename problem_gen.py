@@ -96,6 +96,7 @@ def representatives(n_classes, qubits_lab):
             reprs[3] = 1 / np.sqrt(2) * np.array([1, -1])
             reprs[4] = 1 / np.sqrt(2) * np.array([1, 1j])
             reprs[5] = 1 / np.sqrt(2) * np.array([1, -1j])
+        
     if qubits_lab == 2:
         if n_classes == 0:
             raise ValueError('Nonsense classifier')
@@ -137,8 +138,8 @@ def circuit(theta_aux, entanglement):
             return single_qubit_circuit(theta_aux)
         elif num_qubits == 2 and entanglement == 'n':
             return _qcircuit_2qubit_noentanglement(theta_aux)
-        elif num_qubits == 3 and entanglement == 'n':
-            return _qcircuit_3qubit_noentanglement(theta_aux)
+        elif num_qubits == 3 and entanglement == 'y':
+            return _qcircuit_3qubit_entanglement(theta_aux)
         else:
             raise ValueError('Not Valid')
 
@@ -168,13 +169,20 @@ def _qcircuit_2qubit_noentanglement(theta_aux):
             
     return qc
 
-def _qcircuit_3qubit_noentanglement(theta_aux):
+def _qcircuit_3qubit_entanglement(theta_aux):
     qc = QuantumCircuit(3)
-    for l in range(theta_aux.shape[1]):
-        for q in range(3):
+    for l in range(theta_aux.shape[1] - 1):
+        for q in range(theta_aux.shape[0]):
             mat = U3(theta_aux[q, l, :])
-            gate = UnitaryGate(mat, label="U3_custom")
-            qc.append(gate, [q])
+            qc.append(UnitaryGate(mat), [q])        
+        if l%2 == 0:
+            qc.cz(0,1)
+            qc.cz(1,2)
+        elif l%2 == 1:
+            qc.cz(0,2)
+    for q in range(theta_aux.shape[0]):
+        mat=U3(theta_aux[q,-1,:])
+        qc.append(UnitaryGate(mat), [q])
     return qc
 
 def U3(theta3):
