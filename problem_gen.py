@@ -138,6 +138,10 @@ def circuit(theta_aux, entanglement):
             return single_qubit_circuit(theta_aux)
         elif num_qubits == 2 and entanglement == 'n':
             return _qcircuit_2qubit_noentanglement(theta_aux)
+        elif num_qubits == 2 and entanglement == 'y':
+            return _qcircuit_2qubit_entanglement(theta_aux)
+        elif num_qubits == 3 and entanglement == 'n':
+            return _qcircuit_3qubit_noentanglement(theta_aux)
         elif num_qubits == 3 and entanglement == 'y':
             return _qcircuit_3qubit_entanglement(theta_aux)
         else:
@@ -167,6 +171,27 @@ def _qcircuit_2qubit_noentanglement(theta_aux):
             gate = UnitaryGate(mat, label="U3_custom")
             qc.append(gate, [q])
             
+    return qc
+
+def _qcircuit_2qubit_entanglement(theta_aux):
+    qc = QuantumCircuit(2)
+    for l in range(theta_aux.shape[1] - 1):
+        for q in range(theta_aux.shape[0]):
+            mat = U3(theta_aux[q,l,:])
+            qc.append(UnitaryGate(mat), [q])
+        qc.cz(0,1)
+    for q in range(theta_aux.shape[0]):
+        mat = U3(theta_aux[q,-1,:])
+        qc.append(UnitaryGate(mat), [q])
+    return qc
+
+def _qcircuit_3qubit_noentanglement(theta_aux):
+    qc = QuantumCircuit(3)
+    for l in range(theta_aux.shape[1]):
+        for q in range(3):
+            mat = U3(theta_aux[q, l, :])
+            gate = UnitaryGate(mat, label="U3_custom")
+            qc.append(gate, [q])
     return qc
 
 def _qcircuit_3qubit_entanglement(theta_aux):
