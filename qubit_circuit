@@ -9,7 +9,7 @@ from save_data import *
 from fid_minimization import *
 from weight_fid_minimization import *
 
-problems = ['circle', '3 circles', 'wavy circle', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines']
+problems = ['circle', 'diamond', 'wavy lines', 'iris']
 
 
 def minimizer(chi, problem, qubits, entanglement, layers, method, name, iris_id,
@@ -19,16 +19,14 @@ def minimizer(chi, problem, qubits, entanglement, layers, method, name, iris_id,
     INPUT:
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose among
-            ['circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines', 'iris']
         -qubits: number of qubits, must be an integer
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
-        -method: minimization method, to choose among ['SGD', another valid for function scipy.optimize.minimize]
+        -method: minimization method - only L-BFGS-B was used
         -name: a name we want for our our files to be save with
+        -iris_id: to use the iris dataset
         -seed: seed of numpy.random, needed for replicating results
-        -epochs: number of epochs for a 'SGD' method. If there is another method, this input has got no importance
-        -batch_size: size of the batches for stochastic gradient descent, only for 'SGD' method
-        -eta: learning rate, only for 'SGD' method
     OUTPUT:
         This function has got no outputs, but several files are saved in an appropiate folder. The files are
         -summary.txt: Saves useful information for the problem
@@ -71,15 +69,7 @@ def minimizer(chi, problem, qubits, entanglement, layers, method, name, iris_id,
         write_summary(chi, problem, qubits, entanglement, layers, method, name, iris_id,
               theta, alpha, weight, loss_hist, f, acc_train, acc_test, seed, epochs=epochs)
         
-'''
-def plot_loss_hist(loss_hist):
-    iterations = [point[0] for point in loss_hist]
-    cost = [point[1] for point in loss_hist]
-
-    plt.figure(figsize=(7,7))
-    plt.plot(iterations, cost, linewidth = 2, marker = 'o', color = 'r')
-    plt.show()
-'''
+#============LOSS FUNCTION PLOT =====================
 def plot_loss_tot(chi, problem, qubits, entanglement, layers, method):
     plt.figure(figsize = (7,7))
 
@@ -99,6 +89,7 @@ def plot_loss_tot(chi, problem, qubits, entanglement, layers, method):
     plt.legend()
     plt.show()
 
+#==========ACCURACY PLOT=====================
   def plot_acc_tot(chi, problem, qubits, entanglement, layers, method):
 
     layers_list, acc_trains, acc_tests = [], [], []
