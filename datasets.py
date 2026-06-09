@@ -164,74 +164,76 @@ plt.show()
 #=======================================================
 #======================IRIS DATASET=====================
 #=======================================================
-def get_iris_binary(task_type="setosa_vs_versicolor", test_size=0.2, random_state=42):
-    
-#Binary classification in quantum circuits with load and preprocess the Iris dataset
-#task_type (str): "setosa_vs_versicolor" or "versicolor_vs_virginica"
-#test_size (float): Proportion of the dataset to include in the test split
-#random_state (int): Random state for reproducibility
-        
-#  Returns:
-#        X_train, X_test, y_train, y_test
-    
+# 100 datapoints
+def get_iris_binary_print(iris_id, test_size=0.5, random_state=42):    
     #Load Data
     iris = load_iris()
     X = iris.data
     y = iris.target
     
     #Binary Classification (0:setosa,1:versicolor,2:virginica)
-    if task_type == "setosa_vs_versicolor":
+    if iris_id == "setosa_vs_versicolor":   
         mask = (y == 0) | (y == 1)
-    elif task_type == "versicolor_vs_virginica":
+        X, y = X[mask], y[mask]
+
+    elif iris_id == "versicolor_vs_virginica":
         mask = (y == 1) | (y == 2)
+        X, y = X[mask], y[mask]
+        y = np.where(y == 1, 0, 1) 
+
+    elif iris_id == "setosa_ovr":
+        y = np.where(y == 0, 1, 0)  # setosa->1, rest->0
+
+    elif iris_id == "versicolor_ovr":
+        y = np.where(y == 1, 1, 0)  # versicolor->1, rest->0
+
+    elif iris_id == "virginica_ovr":
+        y = np.where(y == 2, 1, 0)  # virginica->1, rest->0
+
     else:
-        raise ValueError("Please provide a valid task_type.")
-        
-    X = X[mask] #data matrices
-    y = y[mask] #answersheet
-    
-    #Relabel to -1 and 1 (For quantum expectation values)
-    if task_type == "setosa_vs_versicolor":
-        y = np.where(y == 0, -1, 1) # 0 becomes -1, 1 becomes 1
-    elif task_type == "versicolor_vs_virginica":
-        y = np.where(y == 1, -1, 1) # 1 becomes -1, 2 becomes 1
-        
+        raise ValueError("iris_id must be one of: setosa_vs_versicolor, "
+                         "versicolor_vs_virginica, setosa_ovr, "
+                         "versicolor_ovr, virginica_ovr")
+
     #Train and Test Split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
     
     #Reduce to 2 features (PCA) so we can plot decision boundaries later
     from sklearn.decomposition import PCA
-    pca = PCA(n_components=2)
-    X_train_pca = pca.fit_transform(X_train)
-    X_test_pca = pca.transform(X_test)
-    
-    #Standardization
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train_pca)
-    X_test_scaled = scaler.transform(X_test_pca)
-   
-    #Quantum Angle Rescaling (Squeezing values between -pi and +pi)
-    minmax = MinMaxScaler(feature_range=(-np.pi, np.pi))
-    X_train_final = minmax.fit_transform(X_train_scaled)
-    X_test_final = minmax.transform(X_test_scaled)
-    
-    return X_train_final, X_test_final, y_train, y_test
+    #pca = PCA(n_components=2)
+    #X_pca = pca.fit_transform(X)
+    #X_test_pca = pca.transform(X_test)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify= y)
 
-def plot_dataset(X, y):
+    pca = PCA(n_components=2)
+    X_train = pca.fit_transform(X_train)   # fit only on train
+    X_test  = pca.transform(X_test)        # apply same transform to test
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test  = scaler.transform(X_test)
+
+    #minmax = MinMaxScaler(feature_range=(-np.pi, np.pi))
+    #X_train = minmax.fit_transform(X_train)
+    #X_test  = minmax.transform(X_test)    
+
+    data_train = [[(x[0], x[1]), l] for x, l in zip(X_train, y_train)]
+    data_test = [[(x[0], x[1]), l] for x, l in zip(X_test, y_test)]
+    
+    return data_train, data_test, len(X)
+
+def plot_dataset(data_train, data_set):
     """
     Plot the 2D PCA representation of the dataset.
     """
-    import matplotlib.pyplot as plt
-    from sklearn.decomposition import PCA
-    
-    # Reduce 4D data to 2D for plotting
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(X)
+    data = data_train + data_set
+    X = np.array([point[0] for point in data])  # shape (n, 2)
+    y = np.array([point[1] for point in data])  # shape (n,)
     
     plt.figure(figsize=(8, 6))
-    scatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap='bwr', edgecolor='k', s=80)
+    scatter = plt.scatter(X[:, 0], X[:, 1], c=y, cmap='bwr', edgecolor='k', s=80)
     plt.title("Iris Dataset - 2D Representation")
     plt.xlabel("Principal Component 1")
     plt.ylabel("Principal Component 2")
-    plt.colorbar(scatter, ticks=[-1, 1], label="Classes (-1 and 1)")
+    plt.colorbar(scatter, label="Class label")
     plt.show()
