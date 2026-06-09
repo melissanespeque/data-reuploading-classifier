@@ -34,7 +34,9 @@ def problem_generator(problem, qubits, layers, chi, qubits_lab=1):
     elif problem == 'diamond':
         theta, alpha, reprs = q_diamond(qubits, layers, qubits_lab, chi) 
     elif problem == 'wavy lines':
-        theta, alpha, reprs = q_wavy_lines(qubits, layers, qubits_lab, chi)    
+        theta, alpha, reprs = q_wavy_lines(qubits, layers, qubits_lab, chi)
+    elif problem in ['iris', 'iris_ovr']:
+        theta, alpha, reprs = q_iris(qubits, layers, qubits_lab, chi)    
     else:
         raise ValueError('Problem is not valid')
         
@@ -63,6 +65,13 @@ def q_diamond(qubits, layers, qubits_lab, chi):
 
 def q_wavy_lines(qubits, layers, qubits_lab, chi):
     classes = 4
+    reprs = representatives(classes, qubits_lab)
+    theta = np.random.rand(qubits, layers, 3)
+    alpha = np.random.rand(qubits, layers, 2)
+    return theta, alpha, reprs
+
+def q_iris(qubits, layers, qubits_lab, chi):
+    classes = 2
     reprs = representatives(classes, qubits_lab)
     theta = np.random.rand(qubits, layers, 3)
     alpha = np.random.rand(qubits, layers, 2)
