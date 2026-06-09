@@ -9,7 +9,7 @@ from datasets import *
 from problem_gen import *
 
 ### save_data ###
-def write_summary(chi, problem, qubits, entanglement, layers, method, name,
+def write_summary(chi, problem, qubits, entanglement, layers, method, name, iris_id,
           theta, alpha, weights, loss_history, chi_value, acc_train, acc_test, seed, epochs):
     """
     This function takes some informations of a given problem and saves some text files 
@@ -38,7 +38,9 @@ def write_summary(chi, problem, qubits, entanglement, layers, method, name,
         -alpha.txt: saves the alpha parameters as a flat array
         -weight.txt: saves the weights as a flat array if they exist
     """
-    foldname = name_folder(chi, problem, qubits, entanglement, layers, method)
+    
+    foldname = name_folder(chi, problem, qubits, entanglement, layers, method, iris_id)
+   
     create_folder(foldname)
     file_text = open(foldname + '/' + name + '_summary.txt','w')
     file_text.write('\nFigur of merit = '+chi)
@@ -76,7 +78,7 @@ def create_folder(directory):
         print ('Error: Creating directory. ' + directory)
 
 
-def name_folder(chi, problem, qubits, entanglement, layers, method):
+def name_folder(chi, problem, qubits, entanglement, layers, method, iris_id):
     """
     This function takes information from the SGD_step_by_step function and saves the accuracies for training and test sets. It is required for studying the overlearning
     INPUT: 
@@ -93,27 +95,49 @@ def name_folder(chi, problem, qubits, entanglement, layers, method):
     OUTPUT:
         -foldname: A name for a folder
     """
-    chi = chi.lower().replace(' ','_')
-    if chi in ['fidelity', 'weighted_fidelity']: chi += '_chi'
-    if chi not in ['fidelity_chi', 'weighted_fidelity_chi']:
-        raise ValueError('Figure of merit is not valid')
-    foldname = chi + '/'
-    problem = problem.replace(' ', '_')
-    foldname += problem + '/'
-    foldname += str(qubits) + '_qubits/'
-    if qubits != 1: 
-        if entanglement.lower()[0] == 'y':
-            foldname += 'entangled/'
-        if entanglement.lower()[0] == 'n':
-            foldname += 'not_entangled/'
+    
+    if iris_id is not None:
+        chi = chi.lower().replace(' ','_')
+        if chi in ['fidelity', 'weighted_fidelity']: chi += '_chi'
+        if chi not in ['fidelity_chi', 'weighted_fidelity_chi']:
+            raise ValueError('Figure of merit is not valid')
+        foldname = chi + '/'
+        problem = problem.replace(' ', '_')
+        foldname += problem + '/'
+        foldname += iris_id + '/'
+        foldname += str(qubits) + '_qubits/'
+        if qubits != 1: 
+            if entanglement.lower()[0] == 'y':
+                foldname += 'entangled/'
+            if entanglement.lower()[0] == 'n':
+                foldname += 'not_entangled/'
             
-    foldname += str(layers) + '_layers/'
-    foldname += method
+        foldname += str(layers) + '_layers/'
+        foldname += method
+
+    else:
+        chi = chi.lower().replace(' ','_')
+        if chi in ['fidelity', 'weighted_fidelity']: chi += '_chi'
+        if chi not in ['fidelity_chi', 'weighted_fidelity_chi']:
+            raise ValueError('Figure of merit is not valid')
+        foldname = chi + '/'
+        problem = problem.replace(' ', '_')
+        foldname += problem + '/'
+        foldname += str(qubits) + '_qubits/'
+        if qubits != 1: 
+            if entanglement.lower()[0] == 'y':
+                foldname += 'entangled/'
+            if entanglement.lower()[0] == 'n':
+                foldname += 'not_entangled/'
+            
+        foldname += str(layers) + '_layers/'
+        foldname += method
     
     return foldname
 
 
-def painter(chi, problem, qubits, entanglement, layers, method, name, 
+
+def painter(chi, problem, qubits, entanglement, layers, method, name, iris_id,
             seed = 30, standard_test = True, samples = 4000, bw = False, err = False):
     """
     This function takes written text files and paint the results of the problem 
@@ -141,13 +165,19 @@ def painter(chi, problem, qubits, entanglement, layers, method, name,
         qubits_lab = 1
         
     if standard_test == True:
-        data, drawing = data_generator(problem)
-        test_data = data[200:]
-            
+        if problem == 'iris':
+            (train_data, test_data), drawing = data_generator(problem, iris_id)
+    
+        else:
+            data, drawing = data_generator(problem, iris_id= None)
+            test_data = data[20:]
+    
+        #return test_data
+          
     elif standard_test == False:
         test_data, drawing = data_generator(problem, samples = samples)
             
-    if problem in ['circle', 'diamond']:
+    if problem in ['circle', 'diamond', 'iris', 'iris_ovr']:
         classes = 2
 
     elif problem == 'wavy lines':
@@ -155,7 +185,7 @@ def painter(chi, problem, qubits, entanglement, layers, method, name,
         
     reprs = representatives(classes, qubits_lab)
     
-    params = read_summary(chi, problem, qubits, entanglement, layers, method, name)
+    params = read_summary(chi, problem, qubits, entanglement, layers, method, name, iris_id)
     
     if chi == 'fidelity_chi':
         theta, alpha = params
@@ -166,11 +196,11 @@ def painter(chi, problem, qubits, entanglement, layers, method, name,
         sol_test, acc_test = Accuracy_test(theta, alpha, test_data, reprs,
                                            entanglement, chi, weights = weight)
 
-    foldname = name_folder(chi, problem, qubits, entanglement, layers, method)
+    foldname = name_folder(chi, problem, qubits, entanglement, layers, method, iris_id)
     samples_paint(problem, drawing, sol_test, foldname, name, bw)
 
 
-def read_summary(chi, problem, qubits, entanglement, layers, method, name):
+def read_summary(chi, problem, qubits, entanglement, layers, method, name, iris_id):
         
     """
     This function reads the files saved by write_summary and returns theta, alpha and weight parameters
@@ -194,8 +224,8 @@ def read_summary(chi, problem, qubits, entanglement, layers, method, name):
     if chi not in ['fidelity_chi', 'weighted_fidelity_chi']:
         raise ValueError('Figure of merit is not valid')
     if chi == 'fidelity_chi':
-        foldname = name_folder(chi, problem, qubits, entanglement, layers, method)
-        if problem in ['circle', 'diamond', 'wavy lines']:
+        foldname = name_folder(chi, problem, qubits, entanglement, layers, method, iris_id)
+        if problem in ['circle', 'diamond', 'wavy lines', 'iris', 'iris_ovr']:
             theta = np.loadtxt(foldname + '/' + name + '_theta.txt').reshape((qubits, layers, 3))
             dim = 2
             
@@ -203,8 +233,8 @@ def read_summary(chi, problem, qubits, entanglement, layers, method, name):
         return theta, alpha
     
     if chi == 'weighted_fidelity_chi':
-        foldname = name_folder(chi, problem, qubits, entanglement, layers, method)
-        if problem in ['circle', 'diamond', 'wavy lines']:
+        foldname = name_folder(chi, problem, qubits, entanglement, layers, method, iris_id)
+        if problem in ['circle', 'diamond', 'wavy lines', 'iris', 'iris_ovr']:
             theta = np.loadtxt(foldname + '/' + name + '_theta.txt').reshape((qubits, layers, 3))
             dim = 2
             
@@ -212,11 +242,9 @@ def read_summary(chi, problem, qubits, entanglement, layers, method, name):
 
         if problem == 'wavy lines':
             weight = np.loadtxt(foldname + '/' + name + '_weight.txt').reshape((4, qubits))
-        if problem in ['circle','diamond']:
+        if problem in ['circle','diamond', 'iris', 'iris_ovr']:
             weight = np.loadtxt(foldname + '/' + name + '_weight.txt').reshape((2, qubits))
         return theta, alpha, weight
-    
-
 
 def samples_paint(problem, settings, sol, foldname, filename, bw):
     """
@@ -267,25 +295,60 @@ def samples_paint(problem, settings, sol, foldname, filename, bw):
         for k in range(-10,10):        
             ax.plot(s, np.clip(k*scale-s, -1, 1), 'k-', linewidth = 1)
             ax.plot(s, np.clip(s-k*scale+scale/2, -1, 1), 'k-', linewidth = 1)
+    
+    elif problem in ['iris', 'iris_ovr']:
+        pass
+        #iris = load_iris()
+        #X = iris.data
+        #y = iris.target
+
+        #mask = (y == 0) | (y == 1)
+        
+        #X = X[mask] #data matrices
+    
+        #Reduce to 2 features (PCA) so we can plot decision boundaries later
+        #from sklearn.decomposition import PCA
+        #pca = PCA(n_components=2)
+        #X_pca = pca.fit_transform(X)
+        #X_test_pca = pca.transform(X_test)
+
+        #Standardization
+        #scaler = StandardScaler()
+        #X_scaled = scaler.fit_transform(X_pca)
+        #X_test_scaled = scaler.transform(X_test_pca)
+        
+        #ax.scatter(X_scaled[:, 0], X_scaled[:, 1], s = 2)
+        
+    
         
     elif problem == 'non convex':
         freq, x_val, sin_val = settings
         s = np.linspace(-1,1,100)
         ax.plot(s, np.clip(-x_val * s + sin_val * np.sin(freq * np.pi * s), -1, 1), 'k-')
 
-    ax.scatter(sol[:,0], sol[:,1], c=sol[:,-2], cmap = colors_classes, s=2, norm=norm_class)
-    
+    if problem in ['iris', 'iris_ovr']:
+        ax.scatter(sol[:,0], sol[:,1], c=sol[:,-2], cmap = colors_classes, s=30, norm=norm_class)
+    else:
+        ax.scatter(sol[:,0], sol[:,1], c=sol[:,-2], cmap = colors_classes, s=2, norm=norm_class)
     ax.set_xlabel('x', fontsize=16)
     ax.set_ylabel('y', fontsize=16)
     ax.tick_params(axis='both',labelsize=16)
-    ax.set_xlim(-1, 1)
-    ax.set_ylim(-1, 1)
+    if problem in ['iris','iris_ovr']:
+        ax.set_xlim(-4, 4)
+        ax.set_ylim(-4, 4)
+    else:
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
     ax.margins(0)
     #ax.axis('equal')
     ax.set_aspect('equal', adjustable='box')
 
     bx = axs[1]    
-    bx.scatter(sol[:,0], sol[:,1], c=sol[:,-1], cmap = colors_rightwrong, s=2, norm=norm_rightwrong)  
+    if problem in ['iris', 'iris_ovr']:
+        bx.scatter(sol[:,0], sol[:,1], c=sol[:,-1], cmap = colors_rightwrong, s=30, norm=norm_rightwrong)
+    else:
+        bx.scatter(sol[:,0], sol[:,1], c=sol[:,-1], cmap = colors_rightwrong, s=2, norm=norm_rightwrong)
+  
     if problem == 'circle':
         centers, radii = settings
         for c, r in zip(centers, radii):
@@ -305,6 +368,8 @@ def samples_paint(problem, settings, sol, foldname, filename, bw):
             bx.plot(s, np.clip(k*scale-s, -1, 1), 'k-', linewidth = 1)
             bx.plot(s, np.clip(s-k*scale+scale/2, -1, 1), 'k-', linewidth = 1)
         
+    elif problem in ['iris','iris_ovr']:
+        pass
         
     elif problem == 'non convex':
         freq, x_val, sin_val = settings
@@ -315,14 +380,15 @@ def samples_paint(problem, settings, sol, foldname, filename, bw):
     bx.set_xlabel('x', fontsize=16)
     bx.tick_params(axis='x', labelsize = 16)
     bx.tick_params(axis='y', labelsize=0)
-    bx.set_xlim([-1, 1])
-    bx.set_ylim([-1, 1])
+    if problem in ['iris','iris_ovr']:
+        bx.set_xlim(-4, 4)
+        bx.set_ylim(-4, 4)
+    else:
+        bx.set_xlim(-1, 1)
+        bx.set_ylim(-1, 1)
     bx.margins(0)
     #bx.axis('equal')
     bx.set_aspect('equal', adjustable='box')
-
-    fig.savefig(foldname + '/' + filename)
-    plt.close('all')
 
 '''
 ### paint_world ###
