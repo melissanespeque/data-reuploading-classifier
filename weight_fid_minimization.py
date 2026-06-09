@@ -16,7 +16,7 @@ def weighted_fidelity_minimization(theta, alpha, weight, train_data, reprs,
         -train_data: set of data for training. There must be several entries (x,y)
         -reprs: variable encoding the label states of the different classes
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
-        -method: minimization method, to choose between valid methods for function scipy.optimize.minimize]
+        -method: L-BFGS-B
     OUTPUT:
         -theta: optimized point for the theta parameters. The shape is correct (qubits, layers, 3)
         -alpha: optimized point for the alpha parameters. The shape is correct (qubits, layers, dim)
@@ -40,32 +40,6 @@ def weighted_fidelity_minimization(theta, alpha, weight, train_data, reprs,
     theta, alpha, weight = _translate_from_scipy(results['x'], hypars)
             
     return theta, alpha, weight, results['fun'], loss_history
-
-'''
-def reduced_density_matrix_qubit(qc, qubit, ) -> np.ndarray:
-    """
-    Compute the single-qubit reduced density matrix for `qubit`
-    by tracing out all other qubits.
- 
-    Mirrors the original _reduced_density_matrix helper, now using
-    qiskit.quantum_info.partial_trace for correctness and clarity.
- 
-    INPUT:
-        -qc    : QuantumCircuit whose statevector is used
-        -qubit : index of the qubit to keep (0-based)
-    OUTPUT:
-        -rdm : (2, 2) complex numpy array (reduced density matrix)
-    """
-    n = qc.num_qubits
-    sv = Statevector(qc)
-    dm = DensityMatrix(sv)
- 
-    # partial_trace traces OUT the listed qubits; keep only `qubit`
-    qubits_to_trace = [q for q in range(n) if q != qubit]
-    rdm = partial_trace(dm, qubits_to_trace)
-    return rdm.data  # (2, 2) numpy array
-''' 
- 
 
 
 def mat_fidelities(theta_aux, weight, reprs, entanglement,
