@@ -83,7 +83,7 @@ def plot_circle(data, centers, radii):
     
 data, (centers, radii) = circle(samples=4200) #running for N=4200
 fig = plot_circle(data, centers, radii)
-plt.show()
+#plt.show()
 
 #=======================================================
 
@@ -123,7 +123,7 @@ def plot_diamond(data):
     
 data, _ = diamond(samples=4200)
 fig = plot_diamond(data)
-plt.show()
+#plt.show()
 
 #=======================================================
 #Wavy pattern generation function (obtained from the article)
@@ -168,7 +168,7 @@ def plot_wavy(data,freq):
 
 data, freq = wavy_lines(samples=4200, freq=1)
 fig = plot_wavy(data,freq)
-plt.show()
+#plt.show()
 
 #=======================================================
 #======================IRIS DATASET=====================
