@@ -8,11 +8,10 @@ def problem_generator(problem, qubits, layers, chi, qubits_lab=1):
     INPUT: 
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose among
-            ['circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines']
         -qubits: number of qubits, must be an integer
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
 
-        
     OUTPUT:
         -theta: set of parameters needed for the circuit. It is an array with shape (qubits, layers, 3)
         -alpha: set of parameters needed for the circuit. It is an array with shape (qubits, layers, dimension of data)
