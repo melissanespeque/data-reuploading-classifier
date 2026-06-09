@@ -5,15 +5,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 #=======================================================
-#=================SYNTHETIC DATASETS====================
+#===============DATA GENERATION FUNCTION================
 #=======================================================
 problems = ['circle', 'diamond', 'wavy lines', 'iris']
 
-def data_generator(problem, samples=None):
+def data_generator(problem, iris_id, samples=None):
     """
     This function generates the data for a problem
     INPUT: 
-        -problem: Name of the problem, one of: 'circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines'
+        -problem: Name of the problem, one of: 'circle', 'diamond', 'wavy lines', 'iris'
         -samples Number of samples for the data
     OUTPUT:
         -data: set of training and test data
@@ -27,15 +27,23 @@ def data_generator(problem, samples=None):
             
     if problem == 'circle':
         data, settings = circle(samples)
-
+        return data, settings 
+    
     elif problem == 'diamond':
         data, settings = diamond(samples)
-
+        return data, settings 
+    
     elif problem == 'wavy lines':
         data, settings = wavy_lines(samples)
+        return data, settings 
     
-    return data, settings 
-
+    elif problem == 'iris':
+        data_train, data_test, settings = get_iris_binary_print(iris_id) 
+        return (data_train, data_test), settings
+    
+#=======================================================
+#=================SYNTHETIC DATASETS====================
+#=======================================================
 
 #Cirle's generation function (obtained from the article)
 def circle(samples):
@@ -73,14 +81,14 @@ def plot_circle(data, centers, radii):
     plt.plot(center[0] + radius * np.cos(theta), center[1] + radius * np.sin(theta),  #plotting the circle
             'k--', linewidth=2, label='Border')    
     
-data, (centers, radii) = circle(samples=3000) #running for N=3000
+data, (centers, radii) = circle(samples=4200) #running for N=4200
 fig = plot_circle(data, centers, radii)
 plt.show()
 
 #=======================================================
 
 #Diamond's shape pattern generation function
-def diamond(samples, random_seed=42):
+def diamond(samples, random_seed=30):
     np.random.seed(random_seed)
     data = []
     limit = 1
@@ -113,7 +121,7 @@ def plot_diamond(data):
     plt.gca().set_aspect('equal')
     plt.title("Diamonds Pattern Classification")
     
-data, _ = diamond(samples=5000)
+data, _ = diamond(samples=4200)
 fig = plot_diamond(data)
 plt.show()
 
@@ -157,7 +165,8 @@ def plot_wavy(data,freq):
     plt.gca().set_aspect('equal')
     plt.grid(alpha=0.3)
     plt.title('Wavy Lines Classification')
-data, freq = wavy_lines(samples=3000, freq=1)
+
+data, freq = wavy_lines(samples=4200, freq=1)
 fig = plot_wavy(data,freq)
 plt.show()
 
@@ -171,7 +180,7 @@ def get_iris_binary_print(iris_id, test_size=0.5, random_state=42):
     X = iris.data
     y = iris.target
     
-    #Binary Classification (0:setosa,1:versicolor,2:virginica)
+    #Binary Classification (0:setosa, 1:versicolor, 2:virginica)
     if iris_id == "setosa_vs_versicolor":   
         mask = (y == 0) | (y == 1)
         X, y = X[mask], y[mask]
@@ -195,14 +204,10 @@ def get_iris_binary_print(iris_id, test_size=0.5, random_state=42):
                          "versicolor_vs_virginica, setosa_ovr, "
                          "versicolor_ovr, virginica_ovr")
 
-    #Train and Test Split
-    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
     
     #Reduce to 2 features (PCA) so we can plot decision boundaries later
     from sklearn.decomposition import PCA
-    #pca = PCA(n_components=2)
-    #X_pca = pca.fit_transform(X)
-    #X_test_pca = pca.transform(X_test)
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify= y)
 
     pca = PCA(n_components=2)
@@ -212,10 +217,6 @@ def get_iris_binary_print(iris_id, test_size=0.5, random_state=42):
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test  = scaler.transform(X_test)
-
-    #minmax = MinMaxScaler(feature_range=(-np.pi, np.pi))
-    #X_train = minmax.fit_transform(X_train)
-    #X_test  = minmax.transform(X_test)    
 
     data_train = [[(x[0], x[1]), l] for x, l in zip(X_train, y_train)]
     data_test = [[(x[0], x[1]), l] for x, l in zip(X_test, y_test)]
