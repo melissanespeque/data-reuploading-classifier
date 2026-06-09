@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import re
 
 from datasets import *
 from problem_gen import *
@@ -11,7 +12,7 @@ from weight_fid_minimization import *
 problems = ['circle', '3 circles', 'wavy circle', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines']
 
 
-def minimizer(chi, problem, qubits, entanglement, layers, method, name,
+def minimizer(chi, problem, qubits, entanglement, layers, method, name, iris_id,
               seed = 30, epochs=3000, batch_size=20,  eta=0.1):
     """
     This function creates data and minimizes whichever problem (from the selected ones) 
@@ -36,10 +37,18 @@ def minimizer(chi, problem, qubits, entanglement, layers, method, name,
         -weight.txt: saves the weights as a flat array if they exist
     """
     np.random.seed(seed)
-    data, drawing = data_generator(problem)
-    train_data = data[:200]
-    test_data = data[200:]
-    
+
+    if problem == 'iris':
+        (train_data, test_data), drawing = data_generator(problem, iris_id)
+    else:
+        data,drawing = data_generator(problem, iris_id=None)
+        train_data = data[:20]# if changed needs to be changed in save_data.py line 145 too
+        test_data = data[20:]
+
+    print(len(train_data)+ len(test_data))
+    #train_data = data[:20]# if changed needs to be changed in save_data.py line 145 too
+    #test_data = data[20:]
+   
     if chi == 'fidelity_chi':
         qubits_lab = qubits
         theta, alpha, reprs = problem_generator(problem,qubits, layers, chi,
@@ -49,7 +58,7 @@ def minimizer(chi, problem, qubits, entanglement, layers, method, name,
                                             batch_size, eta, epochs)
         acc_train = tester(theta, alpha, train_data, reprs, entanglement, chi)
         acc_test = tester(theta, alpha, test_data, reprs, entanglement, chi)
-        write_summary(chi, problem, qubits, entanglement, layers, method, name,
+        write_summary(chi, problem, qubits, entanglement, layers, method, name, iris_id,
               theta, alpha, 0, loss_hist, f, acc_train, acc_test, seed, epochs=epochs)
     elif chi == 'weighted_fidelity_chi':
         qubits_lab = 1
@@ -59,7 +68,7 @@ def minimizer(chi, problem, qubits, entanglement, layers, method, name,
                                             entanglement, method)
         acc_train = tester(theta, alpha, train_data, reprs, entanglement, chi, weights=weight)
         acc_test = tester(theta, alpha, test_data, reprs, entanglement, chi, weights=weight)
-        write_summary(chi, problem, qubits, entanglement, layers, method, name,
+        write_summary(chi, problem, qubits, entanglement, layers, method, name, iris_id,
               theta, alpha, weight, loss_hist, f, acc_train, acc_test, seed, epochs=epochs)
         
 '''
@@ -88,6 +97,49 @@ def plot_loss_tot(chi, problem, qubits, entanglement, layers, method):
     plt.ylabel('Loss value')
     plt.grid()
     plt.legend()
+    plt.show()
+
+  def plot_acc_tot(chi, problem, qubits, entanglement, layers, method):
+
+    layers_list, acc_trains, acc_tests = [], [], []
+
+    for i in layers:
+        name_fold = name_folder(chi, problem, qubits, entanglement, i, method)
+        summary = os.path.join(name_fold, "run_summary.txt")
+
+        if not os.path.exists(summary):
+            print(f"  [missing] {summary}")
+            
+        acc_train = acc_test = None
+        with open(summary) as f:
+            for line in f:
+                m = re.match(r"acc_train\s*=\s*([0-9.]+)", line.strip())
+                if m:
+                    acc_train = float(m.group(1))
+                m = re.match(r"acc_test\s*=\s*([0-9.]+)", line.strip())
+                if m:
+                    acc_test = float(m.group(1))
+
+        if acc_train is not None and acc_test is not None:
+            layers_list.append(i)
+            acc_trains.append(acc_train)
+            acc_tests.append(acc_test)
+            print(f"  layers={i:2d}  train={acc_train:.3f}  test={acc_test:.3f}")
+        else:
+            print(f"  [parse error] {summary}")
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(layers_list, acc_trains, "o-",  label="acc_train", linewidth=2)
+    ax.plot(layers_list, acc_tests,  "s--", label="acc_test",  linewidth=2)
+
+    ax.set_xlabel("Number of layers")
+    ax.set_ylabel("Accuracy")
+    ax.set_title(f"{chi} | {problem} | {qubits} qubit(s) | entanglement = {entanglement} | {method}")
+    ax.set_xticks(layers_list)
+    ax.set_ylim(0, 1.05)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
     plt.show()
 
                 
