@@ -12,17 +12,18 @@ from problem_gen import *
 def write_summary(chi, problem, qubits, entanglement, layers, method, name, iris_id,
           theta, alpha, weights, loss_history, chi_value, acc_train, acc_test, seed, epochs):
     """
-    This function takes some informations of a given problem and saves some text files 
+    This function takes some informations of a given problem and saves the text files 
     with this information and the parameters which are solution of the problem
     INPUT: 
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose between
-            ['circle', 'diamond', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines', 'iris']
         -qubits: number of qubits, must be an integer
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
-        -method: minimization method, to choose among ['SGD', another valid for function scipy.optimize.minimize]
+        -method: minimization method - only L-BFGS-B was used
         -name: a name we want for our our files to be save with
+        -iris_id: the task to bring from the iris dataset
         -theta: set of parameters needed for the circuit. Must be an array with shape (qubits, layers, 3)
         -alpha: set of parameters needed for the circuit. Must be an array with shape (qubits, layers, dimension of data)
         -weight: set of parameters needed fot the circuit only if chi == 'weighted_fidelity_chi'. Must be an array with shape (classes, qubits)
@@ -79,23 +80,6 @@ def create_folder(directory):
 
 
 def name_folder(chi, problem, qubits, entanglement, layers, method, iris_id):
-    """
-    This function takes information from the SGD_step_by_step function and saves the accuracies for training and test sets. It is required for studying the overlearning
-    INPUT: 
-        -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
-        -problem: name of the problem, to choose among
-            ['circle', 'diamond', 'wavy lines']
-        -qubits: number of qubits, must be an integer
-        -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
-        -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
-        -method: minimization method, to choose among ['SGD', another valid for function scipy.optimize.minimize]
-        -name: a name we want for our our files to be save with
-        -accs_train: list or array with the accuracies of the training set for all epochs
-        -accs_test: list or array with the accuracies of the test set for all epochs
-    OUTPUT:
-        -foldname: A name for a folder
-    """
-    
     if iris_id is not None:
         chi = chi.lower().replace(' ','_')
         if chi in ['fidelity', 'weighted_fidelity']: chi += '_chi'
@@ -144,11 +128,12 @@ def painter(chi, problem, qubits, entanglement, layers, method, name, iris_id,
     INPUT:
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose among
-            ['circle', 'diamond', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines', 'iris']
         -qubits: number of qubits, must be an integer
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
-        -method: minimization method, to choose among ['SGD', another valid for function scipy.optimize.minimize]
+        -method: minimization method - only L-BFGS-B was used
+        -iris_id: to treat the iris dataset
         -name: a name we want for our our files to be save with
         -seed: seed of numpy.random, needed for replicating results
         -standard_test: Whether we want to paint the set test used for checking when minimizing. If True, seed and samples are not taken in account
@@ -207,11 +192,11 @@ def read_summary(chi, problem, qubits, entanglement, layers, method, name, iris_
     INPUT: 
         -chi: cost function, to choose between 'fidelity_chi' or 'weighted_fidelity_chi'
         -problem: name of the problem, to choose among
-            ['circle', 'diamond', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines', 'iris']
         -qubits: number of qubits, must be an integer
         -entanglement: whether there is entanglement or not in the Ansätze, just 'y'/'n'
         -layers: number of layers, must be an integer. If layers == 1, entanglement is not taken in account
-        -method: minimization method, to choose among ['SGD', another valid for function scipy.optimize.minimize]
+        -method: minimization method - only L-BFGS-B was used
         -name: a name we want for our our files to be save with
         
     OUTPUT:
@@ -251,7 +236,7 @@ def samples_paint(problem, settings, sol, foldname, filename, bw):
     This function takes the problem and the points when they are already classified, and saves a picture of them
     INPUT: 
         -problem: name of the problem, to choose among
-            ['circle', '3 circles', 'hypersphere', 'tricrown', 'non convex', 'crown', 'sphere', 'squares', 'wavy lines']
+            ['circle', 'diamond', 'wavy lines', 'iris']
         -settings: parameters the function needs for drawing. Provided by problem_gen.problem_gen
         -sol: solutions of the points alreafy classified
         -foldname : name of the folder where we store results
@@ -298,34 +283,7 @@ def samples_paint(problem, settings, sol, foldname, filename, bw):
     
     elif problem in ['iris', 'iris_ovr']:
         pass
-        #iris = load_iris()
-        #X = iris.data
-        #y = iris.target
-
-        #mask = (y == 0) | (y == 1)
-        
-        #X = X[mask] #data matrices
-    
-        #Reduce to 2 features (PCA) so we can plot decision boundaries later
-        #from sklearn.decomposition import PCA
-        #pca = PCA(n_components=2)
-        #X_pca = pca.fit_transform(X)
-        #X_test_pca = pca.transform(X_test)
-
-        #Standardization
-        #scaler = StandardScaler()
-        #X_scaled = scaler.fit_transform(X_pca)
-        #X_test_scaled = scaler.transform(X_test_pca)
-        
-        #ax.scatter(X_scaled[:, 0], X_scaled[:, 1], s = 2)
-        
-    
-        
-    elif problem == 'non convex':
-        freq, x_val, sin_val = settings
-        s = np.linspace(-1,1,100)
-        ax.plot(s, np.clip(-x_val * s + sin_val * np.sin(freq * np.pi * s), -1, 1), 'k-')
-
+              
     if problem in ['iris', 'iris_ovr']:
         ax.scatter(sol[:,0], sol[:,1], c=sol[:,-2], cmap = colors_classes, s=30, norm=norm_class)
     else:
@@ -340,7 +298,6 @@ def samples_paint(problem, settings, sol, foldname, filename, bw):
         ax.set_xlim(-1, 1)
         ax.set_ylim(-1, 1)
     ax.margins(0)
-    #ax.axis('equal')
     ax.set_aspect('equal', adjustable='box')
 
     bx = axs[1]    
@@ -370,11 +327,6 @@ def samples_paint(problem, settings, sol, foldname, filename, bw):
         
     elif problem in ['iris','iris_ovr']:
         pass
-        
-    elif problem == 'non convex':
-        freq, x_val, sin_val = settings
-        s = np.linspace(-1,1,100)
-        bx.plot(s, np.clip(-x_val * s + sin_val * np.sin(freq * np.pi * s), -1, 1), 'k-')
 
     
     bx.set_xlabel('x', fontsize=16)
@@ -387,92 +339,4 @@ def samples_paint(problem, settings, sol, foldname, filename, bw):
         bx.set_xlim(-1, 1)
         bx.set_ylim(-1, 1)
     bx.margins(0)
-    #bx.axis('equal')
     bx.set_aspect('equal', adjustable='box')
-
-'''
-### paint_world ###
-def paint_world(chi, problem, qubits, entanglement, layers, method, name,
-            seed = 30, standard_test = True, samples = 4000, bw = False, err = False):
-    np.random.seed(seed)
-
-    if chi == 'fidelity_chi':
-        qubits_lab = qubits
-    elif chi == 'weighted_fidelity_chi':
-        qubits_lab = 1
-
-    if standard_test == True:
-        data, drawing = data_generator(problem)
-        if problem == 'sphere':
-            test_data = data[500:]
-        elif problem == 'hypersphere':
-            test_data = data[1000:]
-        else:
-            test_data = data[200:]
-
-    elif standard_test == False:
-        test_data, drawing = data_generator(problem, samples=samples)
-
-    if problem in ['circle', 'wavy circle', 'sphere', 'non convex', 'crown', 'hypersphere']:
-        classes = 2
-    if problem in ['tricrown']:
-        classes = 3
-    elif problem in ['3 circles', 'wavy lines', 'squares']:
-        classes = 4
-
-    reprs = representatives(classes, qubits_lab)
-
-    params = read_summary(chi, problem, qubits, entanglement, layers, method, name)
-
-    if chi == 'fidelity_chi':
-        theta, alpha = params
-        sol_test, acc_test = Accuracy_test(theta, alpha, test_data, reprs, entanglement, chi)
-
-    if chi == 'weighted_fidelity_chi':
-        theta, alpha, weight = params
-        sol_test, acc_test = Accuracy_test(theta, alpha, test_data, reprs,
-                                           entanglement, chi, weights=weight)
-
-    foldname = name_folder(chi, problem, qubits, entanglement, layers, method)
-    angles = np.zeros((len(sol_test), 2))
-    for i, x in enumerate(sol_test[:, :2]):
-        theta_aux = code_coords(theta, alpha, x)
-        C = circuit(theta_aux, entanglement)
-        psi = Statevector(C)
-        angles[i, 0] = np.arccos(np.abs(psi.data[0])**2 - np.abs(psi.data[1])**2) - np.pi/2
-        angles[i, 1] = np.angle(psi.data[1] / psi.data[0])
-        #print(angles[i])
-
-    if bw == False:
-        colors_classes = get_cmap('plasma')
-        norm_class = Normalize(vmin=-.5, vmax=np.max(sol_test[:, -3]) + .5)
-
-        colors_rightwrong = get_cmap('RdYlGn')
-        norm_rightwrong = Normalize(vmin=-.1, vmax=1.1)
-
-    if bw == True:
-        colors_classes = get_cmap('Greys')
-        norm_class = Normalize(vmin=-.1, vmax=np.max(sol_test[:, -3]) + .1)
-
-        colors_rightwrong = get_cmap('Greys')
-        norm_rightwrong = Normalize(vmin=-.1, vmax=1.1)
-
-    fig, ax = plt.subplots(nrows=2, figsize = (4,8.5))
-    ax[0].plot(laea_x(np.pi, np.linspace(0, np.pi)), laea_y(np.pi, np.linspace(0, np.pi)), color='k')
-    ax[0].plot(laea_x(-np.pi, np.linspace(0, -np.pi)), laea_y(-np.pi, np.linspace(0, -np.pi)), color='k')
-    ax[1].plot(laea_x(np.pi, np.linspace(0, np.pi)), laea_y(np.pi, np.linspace(0, np.pi)), color='k')
-    ax[1].plot(laea_x(-np.pi, np.linspace(0, -np.pi)), laea_y(-np.pi, np.linspace(0, -np.pi)), color='k')
-    ax[0].scatter(laea_x(angles[:, 1], angles[:, 0]), laea_y(angles[:, 1], angles[:, 0]), c=sol_test[:, -2],
-                  cmap=colors_classes, s=2, norm=norm_class)
-    ax[1].scatter(laea_x(angles[:, 1], angles[:, 0]), laea_y(angles[:, 1], angles[:, 0]), c=sol_test[:,-1], cmap = colors_rightwrong, s=2, norm=norm_rightwrong)
-    plt.show()
-
-
-def laea_x(lamb, phi):
-    return 2*np.sqrt(2) * np.cos(phi)*np.sin(lamb / 2) / np.sqrt(1 + np.cos(phi)*np.cos(lamb/2))
-
-
-def laea_y(lamb, phi):
-    return np.sqrt(2) * np.sin(phi) / np.sqrt(1 + np.cos(phi)*np.cos(lamb/2))
-
-'''
