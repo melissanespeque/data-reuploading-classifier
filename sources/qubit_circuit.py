@@ -90,7 +90,7 @@ def plot_loss_tot(chi, problem, qubits, entanglement, layers, method):
     plt.show()
 
 #==========ACCURACY PLOT=====================
-  def plot_acc_tot(chi, problem, qubits, entanglement, layers, method):
+def plot_acc_tot(chi, problem, qubits, entanglement, layers, method):
 
     layers_list, acc_trains, acc_tests = [], [], []
 
